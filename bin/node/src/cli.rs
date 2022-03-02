@@ -1,5 +1,9 @@
 use crate::commands::BootstrapNodeCmd;
-use crate::{aleph_cli::AlephCli, chain_spec, commands::BootstrapChainCmd};
+use crate::{
+    aleph_cli::AlephCli,
+    chain_spec,
+    commands::{BootstrapChainCmd, ConvertChainspecToRawCmd},
+};
 use sc_cli::{ChainSpec, RunCmd, RuntimeVersion, SubstrateCli};
 use structopt::StructOpt;
 
@@ -82,4 +86,7 @@ pub enum Subcommand {
 
     /// Revert the chain to a previous state.
     Revert(sc_cli::RevertCmd),
+
+    /// Takes a chainspec and generates a corresponfing raw chainspec
+    ConvertChainspecToRaw(ConvertChainspecToRawCmd),
 }
