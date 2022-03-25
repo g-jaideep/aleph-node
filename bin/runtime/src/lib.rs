@@ -46,8 +46,8 @@ use frame_support::{
 use frame_system::{EnsureRoot, EnsureSignedBy};
 pub use primitives::Balance;
 use primitives::{
-    wrap_methods, ApiError as AlephApiError, AuthorityId as AlephId, DEFAULT_MILLISECS_PER_BLOCK,
-    DEFAULT_SESSIONS_PER_ERA, DEFAULT_SESSION_PERIOD,
+    wrap_methods, ApiError as AlephApiError, AuthorityId as AlephId, 
+    DEFAULT_MILLISECS_PER_BLOCK, DEFAULT_SESSIONS_PER_ERA, DEFAULT_SESSION_PERIOD,
 };
 
 pub use pallet_balances::Call as BalancesCall;
@@ -637,6 +637,11 @@ pub type Executive = frame_executive::Executive<
     AllPallets,
 >;
 
+fn subsample<T: Clone>(authorities: Vec<T>) -> Vec<T> {
+    // Assume we have 8 validators and we sample always the first 4
+    (0..4).map(|i| authorities[i].clone()).collect()
+}
+
 impl_runtime_apis! {
     impl sp_api::Core<Block> for Runtime {
         fn version() -> RuntimeVersion {
@@ -695,7 +700,7 @@ impl_runtime_apis! {
         }
 
         fn authorities() -> Vec<AuraId> {
-            Aura::authorities().to_vec ()
+            subsample(Aura::authorities().to_vec())
         }
     }
 
@@ -740,7 +745,7 @@ impl_runtime_apis! {
 
     impl primitives::AlephSessionApi<Block> for Runtime {
         fn authorities() -> Vec<AlephId> {
-            Aleph::authorities()
+            subsample(Aleph::authorities())
         }
 
         fn millisecs_per_block() -> u64 {
@@ -752,7 +757,7 @@ impl_runtime_apis! {
         }
 
         fn next_session_authorities() -> Result<Vec<AlephId>, AlephApiError> {
-            Session::queued_keys()
+            subsample(Session::queued_keys())
                 .iter()
                 .map(|(_, key)| key.get(AlephId::ID).ok_or(AlephApiError::DecodeKey))
                 .collect::<Result<Vec<AlephId>, AlephApiError>>()
