@@ -46,8 +46,8 @@ use frame_support::{
 use frame_system::{EnsureRoot, EnsureSignedBy};
 pub use primitives::Balance;
 use primitives::{
-    wrap_methods, ApiError as AlephApiError, AuthorityId as AlephId, 
-    DEFAULT_MILLISECS_PER_BLOCK, DEFAULT_SESSIONS_PER_ERA, DEFAULT_SESSION_PERIOD,
+    wrap_methods, ApiError as AlephApiError, AuthorityId as AlephId, DEFAULT_MILLISECS_PER_BLOCK,
+    DEFAULT_SESSIONS_PER_ERA, DEFAULT_SESSION_PERIOD,
 };
 
 pub use pallet_balances::Call as BalancesCall;
@@ -335,13 +335,35 @@ parameter_types! {
     pub const Offset: u32 = 0;
 }
 
+use primitives::SessionIndex;
+type SM= pallet_session::historical::NoteHistoricalRoot<Runtime, Staking>;
+pub struct SubsampleSessionManager;
+
+impl pallet_session::SessionManager<AccountId> for SubsampleSessionManager {
+    fn new_session(new_index: SessionIndex) -> Option<Vec<AccountId>> {
+        SM::new_session(new_index).map(subsample)
+    }
+
+    fn end_session(end_index: SessionIndex) {
+        SM::end_session(end_index)
+    }
+
+    fn start_session(start_index: SessionIndex) {
+        SM::start_session(start_index)
+    }
+
+    fn new_session_genesis(new_index: SessionIndex) -> Option<Vec<AccountId>> {
+        SM::new_session_genesis(new_index).map(subsample)
+    }
+}
+
 impl pallet_session::Config for Runtime {
     type Event = Event;
     type ValidatorId = <Self as frame_system::Config>::AccountId;
     type ValidatorIdOf = pallet_staking::StashOf<Self>;
     type ShouldEndSession = pallet_session::PeriodicSessions<SessionPeriod, Offset>;
     type NextSessionRotation = pallet_session::PeriodicSessions<SessionPeriod, Offset>;
-    type SessionManager = pallet_session::historical::NoteHistoricalRoot<Self, Staking>;
+    type SessionManager = SubsampleSessionManager;
     type SessionHandler = <SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
     type Keys = SessionKeys;
     type WeightInfo = pallet_session::weights::SubstrateWeight<Runtime>;
@@ -700,7 +722,7 @@ impl_runtime_apis! {
         }
 
         fn authorities() -> Vec<AuraId> {
-            subsample(Aura::authorities().to_vec())
+            Aura::authorities().to_vec()
         }
     }
 
@@ -745,7 +767,7 @@ impl_runtime_apis! {
 
     impl primitives::AlephSessionApi<Block> for Runtime {
         fn authorities() -> Vec<AlephId> {
-            subsample(Aleph::authorities())
+            Aleph::authorities()
         }
 
         fn millisecs_per_block() -> u64 {
@@ -757,7 +779,7 @@ impl_runtime_apis! {
         }
 
         fn next_session_authorities() -> Result<Vec<AlephId>, AlephApiError> {
-            subsample(Session::queued_keys())
+            Session::queued_keys()
                 .iter()
                 .map(|(_, key)| key.get(AlephId::ID).ok_or(AlephApiError::DecodeKey))
                 .collect::<Result<Vec<AlephId>, AlephApiError>>()
