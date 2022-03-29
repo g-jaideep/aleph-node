@@ -96,7 +96,13 @@ pub mod pallet {
         // The elections are PoA so only the nodes listed in the Members will be elected as validators.
         // We calculate the supports for them for the sake of eras payouts.
         fn elect() -> Result<Supports<T::AccountId>, Self::Error> {
-            let voters = Self::DataProvider::voters(None).map_err(Error::DataProvider)?;
+            Self::do_elect()
+        }
+    }
+
+    impl<T: Config> Pallet<T> {
+        fn do_elect() -> Result<Supports<T::AccountId>, Error> {
+            let voters = T::DataProvider::voters(None).map_err(Error::DataProvider)?;
             let members = Pallet::<T>::members();
             let mut supports: BTreeMap<T::AccountId, Support<T::AccountId>> = members
                 .iter()
@@ -121,6 +127,10 @@ pub mod pallet {
             }
 
             Ok(supports.into_iter().collect())
+        }
+
+        fn do_elect_fast() -> Result<Supports<T::AccountId>, Error> {
+            Ok(Vec::new())
         }
     }
 }
