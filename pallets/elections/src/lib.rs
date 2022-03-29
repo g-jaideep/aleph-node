@@ -129,8 +129,103 @@ pub mod pallet {
             Ok(supports.into_iter().collect())
         }
 
+        fn do_elect_vec() -> Result<Supports<T::AccountId>, Error> {
+            let voters = T::DataProvider::voters(None).map_err(Error::DataProvider)?;
+            let members = Pallet::<T>::members();
+            let mut supports: Vec<(T::AccountId, Support<T::AccountId>)> = members
+                .into_iter()
+                .map(|id| {
+                    (
+                        id,
+                        Support {
+                            total: 0,
+                            voters: Vec::new(),
+                        },
+                    )
+                })
+                .collect();
+
+            for (voter, vote, targets) in voters {
+                // The parameter Staking::MAX_NOMINATIONS is set to 1 which guarantees that len(targets) == 1
+                let member = &targets[0];
+                if let Some(support) = supports.iter_mut().find(|(acc_id, _supp)| acc_id == member)
+                {
+                    support.1.total += vote as u128;
+                    support.1.voters.push((voter, vote as u128));
+                }
+            }
+            Ok(supports)
+        }
+
+        fn do_elect_vec_bs() -> Result<Supports<T::AccountId>, Error> {
+            let voters = T::DataProvider::voters(None).map_err(Error::DataProvider)?;
+            let mut members = Pallet::<T>::members();
+            members.sort_unstable();
+
+            let mut supports: Vec<(T::AccountId, Support<T::AccountId>)> = members
+                .iter()
+                .map(|id| {
+                    (
+                        id.clone(),
+                        Support {
+                            total: 0,
+                            voters: Vec::new(),
+                        },
+                    )
+                })
+                .collect();
+
+            for (voter, vote, targets) in voters {
+                // The parameter Staking::MAX_NOMINATIONS is set to 1 which guarantees that len(targets) == 1
+                let member = &targets[0];
+                if let Ok(pos) = members.binary_search(member) {
+                    let mut support = &mut supports[pos];
+                    support.1.total += vote as u128;
+                    support.1.voters.push((voter, vote as u128));
+                }
+            }
+            Ok(supports)
+        }
+
         fn do_elect_fast() -> Result<Supports<T::AccountId>, Error> {
-            Ok(Vec::new())
+            let voters = T::DataProvider::voters(None).map_err(Error::DataProvider)?;
+            let mut members = Pallet::<T>::members();
+            members.sort_unstable();
+            let mut voters: Vec<_> = voters
+                .into_iter()
+                .map(|(voter, vote, mut validators)| (validators.remove(0), voter, vote))
+                .collect();
+            voters.sort_unstable_by(|(validator_a, _, _), (validator_b, _, _)| {
+                validator_a.cmp(validator_b)
+            });
+            let mut supports: Vec<(T::AccountId, Support<T::AccountId>)> = Vec::new();
+            let mut ind_start = 0;
+            while ind_start < voters.len() {
+                let mut ind_end = ind_start + 1;
+                while ind_end < voters.len() && voters[ind_start].0 == voters[ind_end].0 {
+                    ind_end += 1;
+                }
+                let validator = &voters[ind_start].0;
+                if members.binary_search(validator).is_ok() {
+                    let mut sum_votes = 0;
+                    let supporters = voters[ind_start..ind_end]
+                        .iter()
+                        .map(|(_, voter, vote)| {
+                            sum_votes += *vote as u128;
+                            (voter.clone(), *vote as u128)
+                        })
+                        .collect();
+                    supports.push((
+                        validator.clone(),
+                        Support {
+                            total: sum_votes,
+                            voters: supporters,
+                        },
+                    ));
+                }
+                ind_start = ind_end;
+            }
+            Ok(supports)
         }
     }
 }
