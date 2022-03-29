@@ -2,6 +2,7 @@
 //! Currently, it's PoA where the validators are set by the root account. In the future, a new
 //! version for DPoS elections will replace the current one.
 
+#![feature(test)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(test)]

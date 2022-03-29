@@ -3,7 +3,9 @@
 use super::*;
 use crate as pallet_elections;
 
-use frame_election_provider_support::{data_provider, ElectionDataProvider, VoteWeight};
+use frame_election_provider_support::{
+    data_provider, ElectionDataProvider, VoteWeight, VoteWeightProvider,
+};
 use frame_support::{
     construct_runtime, parameter_types, sp_io, traits::GenesisBuild, weights::RuntimeDbWeight,
 };
@@ -100,6 +102,8 @@ impl Config for Test {
     type SessionPeriod = SessionPeriod;
 }
 
+pub static mut TARGETS: Vec<(AccountId, VoteWeight, Vec<AccountId>)> = Vec::new();
+
 pub struct StakingMock;
 impl ElectionDataProvider<AccountId, u64> for StakingMock {
     const MAXIMUM_VOTES_PER_VOTER: u32 = 1;
@@ -111,7 +115,7 @@ impl ElectionDataProvider<AccountId, u64> for StakingMock {
     fn voters(
         _maybe_max_len: Option<usize>,
     ) -> data_provider::Result<Vec<(AccountId, VoteWeight, Vec<AccountId>)>> {
-        Ok(Vec::new())
+        unsafe { Ok(TARGETS.clone()) }
     }
 
     fn desired_targets() -> data_provider::Result<u32> {
