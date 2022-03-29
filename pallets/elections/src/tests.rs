@@ -1,7 +1,7 @@
 #![cfg(test)]
 extern crate test;
 
-use frame_election_provider_support::{ElectionProvider, Support};
+use frame_election_provider_support::{ElectionProvider, Support, Supports, VoteWeight};
 
 use crate::mock::*;
 
@@ -31,12 +31,15 @@ fn init_voters(nominators_per_validator: u64) {
     }
 }
 
-fn run_elect_bench(nominators_per_validator: u64, b: &mut Bencher) {
+fn run_elect_bench<F: Fn() -> Supports<AccountId>>(
+    nominators_per_validator: u64,
+    b: &mut Bencher,
+    elect: F,
+) {
     new_test_ext((0..10).collect()).execute_with(|| {
         init_voters(nominators_per_validator);
         b.iter(|| {
-            let res = <Elections as ElectionProvider<AccountId, u64>>::elect();
-            let support = &res.unwrap()[0].1;
+            let support = &elect()[0].1;
             assert!(support.voters.len() == nominators_per_validator as usize);
         });
     });
@@ -44,10 +47,20 @@ fn run_elect_bench(nominators_per_validator: u64, b: &mut Bencher) {
 
 #[bench]
 fn bench_elect_5k(b: &mut Bencher) {
-    run_elect_bench(500, b)
+    run_elect_bench(500, b, || Elections::do_elect().unwrap())
+}
+
+#[bench]
+fn bench_fast_elect_5k(b: &mut Bencher) {
+    run_elect_bench(500, b, || Elections::do_elect_fast().unwrap())
 }
 
 #[bench]
 fn bench_elect_10k(b: &mut Bencher) {
-    run_elect_bench(1000, b)
+    run_elect_bench(1000, b, || Elections::do_elect().unwrap())
+}
+
+#[bench]
+fn bench_fast_elect_10k(b: &mut Bencher) {
+    run_elect_bench(1000, b, || Elections::do_elect_fast().unwrap())
 }

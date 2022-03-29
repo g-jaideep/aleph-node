@@ -102,7 +102,7 @@ pub mod pallet {
     }
 
     impl<T: Config> Pallet<T> {
-        fn do_elect() -> Result<Supports<T::AccountId>, Error> {
+        pub fn do_elect() -> Result<Supports<T::AccountId>, Error> {
             let voters = T::DataProvider::voters(None).map_err(Error::DataProvider)?;
             let members = Pallet::<T>::members();
             let mut supports: BTreeMap<T::AccountId, Support<T::AccountId>> = members
@@ -130,7 +130,7 @@ pub mod pallet {
             Ok(supports.into_iter().collect())
         }
 
-        fn do_elect_fast() -> Result<Supports<T::AccountId>, Error> {
+        pub fn do_elect_fast() -> Result<Supports<T::AccountId>, Error> {
             Ok(Vec::new())
         }
     }
