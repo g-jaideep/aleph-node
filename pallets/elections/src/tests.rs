@@ -4,6 +4,7 @@ extern crate test;
 use frame_election_provider_support::{ElectionProvider, Support, Supports, VoteWeight};
 
 use crate::mock::*;
+use rand::{seq::SliceRandom, thread_rng};
 
 #[test]
 fn test_elect() {
@@ -27,7 +28,8 @@ fn init_voters(nominators_per_validator: u64) {
         TARGETS = (0..10u64)
             .map(|i| (0..nominators_per_validator).map(move |n| (n, 10u64, vec![i])))
             .flatten()
-            .collect()
+            .collect();
+        TARGETS.shuffle(&mut thread_rng());
     }
 }
 
@@ -46,16 +48,6 @@ fn run_elect_bench<F: Fn() -> Supports<AccountId>>(
 }
 
 #[bench]
-fn bench_elect_5k(b: &mut Bencher) {
-    run_elect_bench(500, b, || Elections::do_elect().unwrap())
-}
-
-#[bench]
-fn bench_fast_elect_5k(b: &mut Bencher) {
-    run_elect_bench(500, b, || Elections::do_elect_fast().unwrap())
-}
-
-#[bench]
 fn bench_elect_10k(b: &mut Bencher) {
     run_elect_bench(1000, b, || Elections::do_elect().unwrap())
 }
@@ -63,4 +55,14 @@ fn bench_elect_10k(b: &mut Bencher) {
 #[bench]
 fn bench_fast_elect_10k(b: &mut Bencher) {
     run_elect_bench(1000, b, || Elections::do_elect_fast().unwrap())
+}
+
+#[bench]
+fn bench_elect_vec_10k(b: &mut Bencher) {
+    run_elect_bench(1000, b, || Elections::do_elect_vec().unwrap())
+}
+
+#[bench]
+fn bench_elect_vec_bs_10k(b: &mut Bencher) {
+    run_elect_bench(1000, b, || Elections::do_elect_vec_bs().unwrap())
 }
