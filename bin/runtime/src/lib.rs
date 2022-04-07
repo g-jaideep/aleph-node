@@ -452,7 +452,7 @@ impl pallet_staking::Config for Runtime {
     type NextNewSession = Session;
     type MaxNominatorRewardedPerValidator = MaxNominatorRewardedPerValidator;
     type OffendingValidatorsThreshold = OffendingValidatorsThreshold;
-    type SortedListProvider = pallet_staking::UseNominatorsMap<Runtime>;
+    type SortedListProvider = BagsList;
     type WeightInfo = PayoutStakersDecreasedWeightInfo;
 }
 
@@ -575,6 +575,17 @@ impl pallet_utility::Config for Runtime {
     type PalletsOrigin = OriginCaller;
 }
 
+mod bag_thresholds;
+mod weights;
+parameter_types! {
+    pub const BagThresholds: &'static [u64] = &bag_thresholds::THRESHOLDS;
+}
+impl pallet_bags_list::Config for Runtime {
+    type Event = Event;
+    type VoteWeightProvider = Staking;
+    type WeightInfo = weights::pallet_bags_list::WeightInfo<Runtime>;
+    type BagThresholds = BagThresholds;
+}
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
     pub enum Runtime where
@@ -600,6 +611,7 @@ construct_runtime!(
         Utility: pallet_utility::{Pallet, Call, Storage, Event} = 15,
         Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>} = 16,
         Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>} = 17,
+        BagsList: pallet_bags_list::{Pallet, Call, Storage, Event<T>} = 18,
     }
 );
 
