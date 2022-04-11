@@ -15,5 +15,6 @@ exclude = [
   "aleph-client",
   "fork-off",
   "benches/payout-stakers",
+  "benches/bags_list_vs_iter",
   "bin/cliain",
 ]
