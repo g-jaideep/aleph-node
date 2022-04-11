@@ -1735,6 +1735,7 @@ dependencies = [
  "log",
  "parity-scale-codec",
  "primitives",
+ "rand 0.8.5",
  "rayon",
  "sp-core",
  "sp-keyring",
