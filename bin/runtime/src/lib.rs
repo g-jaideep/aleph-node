@@ -33,7 +33,7 @@ pub use frame_support::{
     },
     weights::{
         constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
-        IdentityFee, Weight,
+        IdentityFee, Weight, ConstantMultiplier
     },
     StorageValue,
 };
@@ -287,7 +287,7 @@ parameter_types! {
 
 impl pallet_transaction_payment::Config for Runtime {
     type OnChargeTransaction = CurrencyAdapter<Balances, EverythingToTheTreasury>;
-    type TransactionByteFee = TransactionByteFee;
+    type LengthToFee = ConstantMultiplier<Balance, TransactionByteFee>;
     type WeightToFee = IdentityFee<Balance>;
     type FeeMultiplierUpdate =
         TargetedFeeAdjustment<Self, TargetSaturationLevel, FeeVariability, MinimumMultiplier>;
@@ -483,7 +483,7 @@ impl pallet_staking::Config for Runtime {
     type NextNewSession = Session;
     type MaxNominatorRewardedPerValidator = MaxNominatorRewardedPerValidator;
     type OffendingValidatorsThreshold = OffendingValidatorsThreshold;
-    type SortedListProvider = pallet_staking::UseNominatorsMap<Runtime>;
+    type VoterList = pallet_staking::UseNominatorsAndValidatorsMap<Runtime>;
     type MaxUnlockingChunks = ConstU32<16>;
     type BenchmarkingConfig = StakingBenchmarkingConfig;
     type WeightInfo = PayoutStakersDecreasedWeightInfo;

@@ -11,8 +11,8 @@ tag = "polkadot-v0.9.18.b26ad4db"
 
 [dependencies]
 # Substrate dependencies
-sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18", features = ["full_crypto"] }
-sp-runtime = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18" }
+sp-core = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation", features = ["full_crypto"] }
+sp-runtime = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation" }
 
 # other dependencies
 serde_json = { version = "1.0" }

@@ -10,37 +10,37 @@ tokio = { version = "1.17", features = [ "sync", "macros", "time", "rt-multi-thr
 codec = { package = "parity-scale-codec", version = "3.0", default-features = false, features = ["derive"] }
 hash-db = { version = "0.15.2", default-features = false }
 log = "0.4.16"
-lru = "0.7.3"
+lru = "0.7.5"
 rand = "0.8.5"
 futures = "0.3.21"
 futures-timer = "3.0"
 parking_lot = "0.12.0"
 parity-util-mem = "0.11.0"
-prometheus-endpoint = { package = "substrate-prometheus-endpoint", git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sp-keystore = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sc-network = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sc-telemetry = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
+prometheus-endpoint = { package = "substrate-prometheus-endpoint", git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sp-keystore = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sc-network = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sc-telemetry = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
 aleph-bft = { git = "https://github.com/Cardinal-Cryptography/AlephBFT.git", tag = "codec-3.0" }
 serde = "1.0"
-sc-service = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sp-application-crypto = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sp-runtime = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sp-state-machine = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sp-trie = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sc-utils = {  git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sp-api = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sp-blockchain = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sc-consensus = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sp-consensus = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sc-client-api = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sp-io= { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
+sc-service = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sp-application-crypto = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sp-core = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sp-runtime = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sp-state-machine = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sp-trie = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sc-utils = {  git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sp-api = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sp-blockchain = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sc-consensus = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sp-consensus = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sc-client-api = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sp-io= { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
 derive_more = "0.99.17"
 env_logger = "0.9.0"
 async-trait = "0.1.53"
 ip_network = "0.4.1"
 
 [dev-dependencies]
-substrate-test-runtime-client = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-substrate-test-runtime = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
-sc-block-builder = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.18"}
+substrate-test-runtime-client = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+substrate-test-runtime = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}
+sc-block-builder = { git = "https://github.com/Cardinal-Cryptography/substrate.git", branch = "turn-off-reputation"}

@@ -109,6 +109,9 @@ run_node() {
     -laleph-data-store=debug \
     -laleph-updater=debug \
     -laleph-metrics=debug \
+    -lpeerset=trace \
+    -lsync=trace \
+    -lancestor-search=debug \
     2> $auth.log > /dev/null & \
 }
 

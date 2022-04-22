@@ -8,6 +8,7 @@ use crate::{
     network::{ComponentNetwork, DataNetwork, ReceiverComponent, RequestBlocks, SimpleNetwork},
     BlockHashNum, SessionBoundaries,
 };
+
 use futures::{
     channel::{
         mpsc::{self, UnboundedSender},
@@ -19,7 +20,10 @@ use futures_timer::Delay;
 use log::{debug, error, info, trace, warn};
 use lru::LruCache;
 use sc_client_api::{BlockchainEvents, HeaderBackend};
-use sp_runtime::traits::{Block as BlockT, Header as HeaderT, NumberFor, One};
+use sp_runtime::{
+    traits::{Block as BlockT, Header as HeaderT, NumberFor, One},
+    SaturatedConversion,
+};
 use std::{
     collections::{hash_map::Entry::Occupied, BTreeMap, HashMap, HashSet},
     default::Default,
@@ -117,8 +121,8 @@ impl Default for DataStoreConfig {
             max_proposals_pending: 80_000,
             max_messages_pending: 40_000,
             available_proposals_cache_capacity: 8000,
-            periodic_maintenance_interval: Duration::from_secs(60),
-            request_block_after: Duration::from_secs(100),
+            periodic_maintenance_interval: Duration::from_secs(15),
+            request_block_after: Duration::from_secs(60),
         }
     }
 }
@@ -278,6 +282,19 @@ where
         self.on_block_finalized(highest_finalized);
     }
 
+    fn block_to_request(&mut self, proposal: &AlephProposal<B>) -> Option<BlockHashNum<B>> {
+        let bottom = proposal.number_bottom_block();
+        for i in 0..proposal.len() {
+            let hash = proposal[i];
+            let num = bottom + <NumberFor<B>>::saturated_from(i);
+            let block = BlockHashNum::<B>::new(hash, num);
+            if !self.chain_info_provider.is_block_imported(&block) {
+                return Some(block);
+            }
+        }
+        None
+    }
+
     fn run_maintenance(&mut self) {
         self.update_highest_finalized();
 
@@ -304,8 +321,7 @@ where
                 // `bump_proposal` returns false if the bump didn't make the proposal available, meaning that it is still pending
                 if let Ok(time_waiting) = now.duration_since(first_occurrence) {
                     if time_waiting >= self.config.request_block_after {
-                        let block = proposal.top_block();
-                        if !self.chain_info_provider.is_block_imported(&block) {
+                        if let Some(block) = self.block_to_request(&proposal) {
                             debug!(target: "aleph-data-store", "Requesting a stale block {:?} after it has been missing for {:?} secs.", block, time_waiting.as_secs());
                             self.block_requester
                                 .request_stale_block(block.hash, block.num);
