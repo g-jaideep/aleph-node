@@ -2,73 +2,63 @@
 
 use ink_lang as ink;
 
+// TODO : create ERC20
+// TODO : contract holds ERC20 funds
+// TODO : contract distributes funds to users accounts (according to a formula)
+
 #[ink::contract]
 mod the_button {
 
-    /// Defines the storage of your contract.
-    /// Add new fields to the below struct in order
-    /// to add new static storage fields to your contract.
+    use ink_storage::{traits::SpreadAllocate, Mapping};
+
+    /// Defines the storage
     #[ink(storage)]
+    #[derive(SpreadAllocate)]
     pub struct TheButton {
-        /// Stores a single `bool` value on the storage.
-        value: bool,
+        /// block number at which the game ends
+        deadline: u32,
+        /// Stores a mapping between user accounts and the block number at which they pressed the button
+        presses: Mapping<AccountId, u32>,
+        /// stores the laast account that pressed the button
+        last_presser: AccountId,
     }
+
+    /// Error types.
+    #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
+    #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+    pub enum Error {
+        /// Returned if given account already pressed the button
+        AlreadyParticipated,
+        /// Returned if button is pressed after the deadline
+        AfterDeadline,
+    }
+
+    /// Result type.
+    pub type Result<T> = core::result::Result<T, Error>;
 
     impl TheButton {
-        /// Constructor that initializes the `bool` value to the given `init_value`.
+        /// Constructor
         #[ink(constructor)]
-        pub fn new(init_value: bool) -> Self {
-            Self { value: init_value }
+        pub fn new() -> Self {
+            ink_lang::utils::initialize_contract(|contract: &mut Self| {
+                let now = Self::env().block_number();
+                contract.deadline = now + 604800u32;
+            })
         }
 
-        /// Constructor that initializes the `bool` value to `false`.
-        ///
-        /// Constructors can delegate to other constructors.
-        #[ink(constructor)]
-        pub fn default() -> Self {
-            Self::new(Default::default())
-        }
-
-        /// A message that can be called on instantiated contracts.
-        /// This one flips the value of the stored `bool` from `true`
-        /// to `false` and vice versa.
+        // TODO
+        /// Button press logic
         #[ink(message)]
-        pub fn flip(&mut self) {
-            self.value = !self.value;
-        }
+        pub fn press(&mut self) -> Result<()> {
+            let by = self.env().caller();
 
-        /// Simply returns the current value of our `bool`.
-        #[ink(message)]
-        pub fn get(&self) -> bool {
-            self.value
-        }
-    }
+            if self.presses.get(&by).is_some() {
+                return Err(Error::AlreadyParticipated);
+            }
 
-    /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
-    /// module and test functions are marked with a `#[test]` attribute.
-    /// The below code is technically just normal Rust code.
-    #[cfg(test)]
-    mod tests {
-        /// Imports all the definitions from the outer scope so we can use them here.
-        use super::*;
+            let now = self.env().block_number();
 
-        /// Imports `ink_lang` so we can use `#[ink::test]`.
-        use ink_lang as ink;
-
-        /// We test if the default constructor does its job.
-        #[ink::test]
-        fn default_works() {
-            let the_button = TheButton::default();
-            assert_eq!(the_button.get(), false);
-        }
-
-        /// We test a simple use case of our contract.
-        #[ink::test]
-        fn it_works() {
-            let mut the_button = TheButton::new(false);
-            assert_eq!(the_button.get(), false);
-            the_button.flip();
-            assert_eq!(the_button.get(), true);
+            Ok(())
         }
     }
 }
