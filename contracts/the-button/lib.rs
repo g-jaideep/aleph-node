@@ -9,7 +9,7 @@ use ink_lang as ink;
 // e.g. :
 // - 50% go to the Pressiah
 // - rest is distributed proportionally to how long has a given user extended TheButtons life for
-// TODO : add upgardeability (proxy)
+// TODO : add upgradeability (proxy)
 
 #[ink::contract]
 mod the_button {
@@ -18,7 +18,7 @@ mod the_button {
 
     /// Result type
     pub type Result<T> = core::result::Result<T, Error>;
-    /// How many blocks does the button live for
+    /// How many blocks does The Button live for
     const BUTTON_LIFETIME: u32 = 604800; // 7 days assuming 1s block time
 
     /// Defines the storage
@@ -29,9 +29,9 @@ mod the_button {
         is_dead: bool,
         /// block number at which the game ends
         deadline: u32,
-        /// Stores a mapping between user accounts and the block number of blocks they extended th ebutton life for
+        /// Stores a mapping between user accounts and the block number of blocks they extended The Buttons life for
         presses: Mapping<AccountId, u32>,
-        /// stores the laast account that pressed the button
+        /// stores the last account that pressed The Button
         last_presser: AccountId,
     }
 
@@ -39,7 +39,7 @@ mod the_button {
     #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
     pub enum Error {
-        /// Returned if given account already pressed the button
+        /// Returned if given account already pressed The Button
         AlreadyParticipated,
         /// Returned if button is pressed after the deadline
         AfterDeadline,
@@ -60,6 +60,7 @@ mod the_button {
         pub fn new() -> Self {
             ink_lang::utils::initialize_contract(|contract: &mut Self| {
                 let now = Self::env().block_number();
+                contract.is_dead = false;
                 contract.deadline = now + BUTTON_LIFETIME;
             })
         }
@@ -67,7 +68,9 @@ mod the_button {
         // TODO
         /// End of the game logic
         fn death(&mut self) -> Result<()> {
-            todo!()
+            self.is_dead = true;
+
+            Ok(())
         }
 
         /// Button press logic
@@ -79,6 +82,7 @@ mod the_button {
 
             let now = self.env().block_number();
             if self.deadline >= now {
+                // trigger Buttons death
                 return self.death();
             }
 
