@@ -11,7 +11,7 @@ ink_metadata = { version = "3.0", default-features = false, features = ["derive"
 ink_env = { version = "3.0", default-features = false }
 ink_storage = { version = "3.0", default-features = false }
 ink_lang = { version = "3.0", default-features = false }
-trait_erc20 = { path = "../trait-erc20" }
+trait_erc20 = { path = "../trait-erc20", default-features = false }
 
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
@@ -31,5 +31,6 @@ std = [
     "ink_lang/std",
     "scale/std",
     "scale-info/std",
+    "trait_erc20/std",
 ]
 ink-as-dependency = []
