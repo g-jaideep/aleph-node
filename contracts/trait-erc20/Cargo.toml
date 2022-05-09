@@ -11,16 +11,6 @@ ink_env = { version = "3.0", default-features = false }
 ink_storage = { version = "3.0", default-features = false }
 ink_lang = { version = "3.0", default-features = false }
 
-# ink_allocator = { version = "3.0", default-features = false }
-# ink_engine = { version = "3.0", default-features = false }
-# getrandom = { version = "0.2", default-features = false, features = ["js"] }
-
-# ink_allocator = { version = "3.0", default-features = false, features = ["disable_oom", "disable_panic_handler"] }
-
-# secp256k1 = { version = "0.22.0", features = ["recovery", "global-context"], default-features = false }
-
-
-
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2", default-features = false, features = ["derive"], optional = true }
 
@@ -42,9 +32,5 @@ std = [
     "ink_lang/std",
     "scale/std",
     "scale-info/std",
-    
-    # "ink_allocator/std",
-    # "ink_engine/std",    
-    # "secp256k1/std",
 ]
 ink-as-dependency = []
