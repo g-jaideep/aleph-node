@@ -20,27 +20,27 @@ pub enum Error {
 #[ink::trait_definition]
 pub trait Erc20 {
     /// Returns the total token supply.
-    #[ink(message)]
+    #[ink(message, selector = 1)]
     fn total_supply(&self) -> Balance;
 
     /// Returns the account balance for the specified `owner`.
-    #[ink(message)]
+    #[ink(message, selector = 2)]
     fn balance_of(&self, owner: AccountId) -> Balance;
 
     /// Returns the amount which `spender` is still allowed to withdraw from `owner`.
-    #[ink(message)]
+    #[ink(message, selector = 3)]
     fn allowance(&self, owner: AccountId, spender: AccountId) -> Balance;
 
     /// Transfers `value` amount of tokens from the caller's account to account `to`.
-    #[ink(message)]
+    #[ink(message, selector = 4)]
     fn transfer(&mut self, to: AccountId, value: Balance) -> Result<()>;
 
     /// Allows `spender` to withdraw from the caller's account multiple times, up to
     /// the `value` amount.
-    #[ink(message)]
+    #[ink(message, selector = 5)]
     fn approve(&mut self, spender: AccountId, value: Balance) -> Result<()>;
 
     /// Transfers `value` tokens on the behalf of `from` to the account `to`.
-    #[ink(message)]
+    #[ink(message, selector = 6)]
     fn transfer_from(&mut self, from: AccountId, to: AccountId, value: Balance) -> Result<()>;
 }

@@ -2,19 +2,24 @@
 
 use ink_lang as ink;
 
-// TODO : getters
-// TODO : create ERC20
 // TODO : contract holds ERC20 funds
 // TODO : contract distributes funds to all accounts that participated (according to a formula)
 // e.g. :
 // - 50% go to the Pressiah
 // - rest is distributed proportionally to how long has a given user extended TheButtons life for
+// TODO : add getters
 // TODO : add upgradeability (proxy)
 
 #[ink::contract]
 mod the_button {
 
+    use button_token::{ButtonToken, ButtonTokenRef};
+    use ink_env::{
+        call::{build_call, Call, DelegateCall, ExecutionInput, Selector},
+        DefaultEnvironment,
+    };
     use ink_storage::{traits::SpreadAllocate, Mapping};
+    use trait_erc20::erc20::Erc20;
 
     /// Result type
     pub type Result<T> = core::result::Result<T, Error>;
@@ -33,6 +38,8 @@ mod the_button {
         presses: Mapping<AccountId, u32>,
         /// stores the last account that pressed The Button
         last_presser: AccountId,
+        // the token instance on-chain address
+        // token: ,
     }
 
     /// Error types
@@ -57,7 +64,10 @@ mod the_button {
     impl TheButton {
         /// Constructor
         #[ink(constructor)]
-        pub fn new() -> Self {
+        pub fn new(
+            version: u32,
+            button_token_supply: u128, // , button_token_code_hash: Hash
+        ) -> Self {
             ink_lang::utils::initialize_contract(|contract: &mut Self| {
                 let now = Self::env().block_number();
                 contract.is_dead = false;
@@ -69,6 +79,25 @@ mod the_button {
         /// End of the game logic
         fn death(&mut self) -> Result<()> {
             self.is_dead = true;
+
+            // TODO: Pressiah gets 50% of supply
+            let total_balance = build_call::<DefaultEnvironment>()
+                .call_type(
+                    Call::new()
+                        // TODO
+                        .callee(AccountId::from([0x42; 32]))
+                        .gas_limit(5000),
+                )
+                .transferred_value(10)
+                .exec_input(
+                    // TODO
+                    ExecutionInput::new(Selector::new([0xDE, 0xAD, 0xBE, 0xEF]))
+                        // TODO
+                        .push_arg(42u8),
+                )
+                .returns::<Balance>()
+                .fire()
+                .unwrap();
 
             Ok(())
         }
@@ -99,10 +128,10 @@ mod the_button {
             self.deadline = now + BUTTON_LIFETIME;
 
             // emit event
-            self.env().emit_event(ButtonPressed {
-                from: caller,
-                when: now,
-            });
+            // self.env().emit_event(ButtonPressed {
+            //     from: caller,
+            //     when: now,
+            // });
 
             Ok(())
         }

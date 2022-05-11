@@ -2,9 +2,10 @@
 
 use ink_lang as ink;
 
+pub use self::button_token::{ButtonToken, ButtonTokenRef};
+
 #[ink::contract]
-mod erc20 {
-    use ink_lang as ink;
+pub mod button_token {
     use ink_storage::{traits::SpreadAllocate, Mapping};
     use trait_erc20::erc20::{Erc20, Error, Result};
 
@@ -66,9 +67,10 @@ mod erc20 {
         }
     }
 
+    // TODO : investigate whether message selectors carry over from trait (afaik not, which is too bad)
     impl Erc20 for ButtonToken {
         /// Returns the total token supply.
-        #[ink(message)]
+        #[ink(message, selector = 1)]
         fn total_supply(&self) -> Balance {
             self.total_supply
         }
@@ -76,7 +78,7 @@ mod erc20 {
         /// Returns the account balance for the specified `owner`.
         ///
         /// Returns `0` if the account is non-existent.
-        #[ink(message)]
+        #[ink(message, selector = 2)]
         fn balance_of(&self, owner: AccountId) -> Balance {
             self.balance_of_impl(&owner)
         }
@@ -84,7 +86,7 @@ mod erc20 {
         /// Returns the amount which `spender` is still allowed to withdraw from `owner`.
         ///
         /// Returns `0` if no allowance has been set.
-        #[ink(message)]
+        #[ink(message, selector = 3)]
         fn allowance(&self, owner: AccountId, spender: AccountId) -> Balance {
             self.allowance_impl(&owner, &spender)
         }
@@ -97,7 +99,7 @@ mod erc20 {
         ///
         /// Returns `InsufficientBalance` error if there are not enough tokens on
         /// the caller's account balance.
-        #[ink(message)]
+        #[ink(message, selector = 4)]
         fn transfer(&mut self, to: AccountId, value: Balance) -> Result<()> {
             let from = self.env().caller();
             self.transfer_from_to(&from, &to, value)
@@ -109,7 +111,7 @@ mod erc20 {
         /// If this function is called again it overwrites the current allowance with `value`.
         ///
         /// An `Approval` event is emitted.
-        #[ink(message)]
+        #[ink(message, selector = 5)]
         fn approve(&mut self, spender: AccountId, value: Balance) -> Result<()> {
             let owner = self.env().caller();
             self.allowances.insert((&owner, &spender), &value);
@@ -135,7 +137,7 @@ mod erc20 {
         ///
         /// Returns `InsufficientBalance` error if there are not enough tokens on
         /// the account balance of `from`.
-        #[ink(message)]
+        #[ink(message, selector = 6)]
         fn transfer_from(&mut self, from: AccountId, to: AccountId, value: Balance) -> Result<()> {
             let caller = self.env().caller();
             let allowance = self.allowance_impl(&from, &caller);
