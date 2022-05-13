@@ -2,13 +2,14 @@
 
 use ink_lang as ink;
 
-// TODO : contract holds ERC20 funds
+// DONE : contract holds ERC20 funds
 // TODO : contract distributes funds to all accounts that participated (according to a formula)
 // e.g. :
 // - 50% go to the Pressiah
 // - rest is distributed proportionally to how long has a given user extended TheButtons life for
 // TODO : add getters
 // TODO : add upgradeability (proxy)
+// TODO : add sybil protection (only staking accounts can participate?)
 
 #[ink::contract]
 mod the_button {
@@ -149,6 +150,7 @@ mod the_button {
                 .fire()?;
 
             // Pressiah gets 50% of supply
+            let pressiah_reward = total_balance / 2;
             if let Some(pressiah) = self.last_presser {
                 let _ = build_call::<DefaultEnvironment>()
                     .call_type(Call::new().callee(button_token).gas_limit(5000))
@@ -158,14 +160,14 @@ mod the_button {
                             Selector::new([0, 0, 0, 4]), // transfer
                         )
                         .push_arg(pressiah)
-                        .push_arg(total_balance / 2),
+                        .push_arg(pressiah_reward),
                     )
                     .returns::<()>()
                     .fire()?;
             }
 
             let total = self.total_scores;
-            let remaining_balance = total_balance / 2;
+            let remaining_balance = total_balance - pressiah_reward;
             // rewards are distributed to participants proportionally to their score
             self.press_accounts.iter().map(|account_id| {
                 if let Some(score) = self.presses.get(account_id) {
