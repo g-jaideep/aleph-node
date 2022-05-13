@@ -3,13 +3,13 @@
 use ink_lang as ink;
 
 // DONE : contract holds ERC20 funds
-// TODO : contract distributes funds to all accounts that participated (according to a formula)
+// DONE : contract distributes funds to all accounts that participated (according to a formula)
 // e.g. :
 // - 50% go to the Pressiah
 // - rest is distributed proportionally to how long has a given user extended TheButtons life for
 // TODO : add getters
 // TODO : add upgradeability (proxy)
-// TODO : add sybil protection (only staking accounts can participate?)
+// TODO : add sybil protection (only staking accounts can participate)
 
 #[ink::contract]
 mod the_button {
@@ -96,7 +96,7 @@ mod the_button {
         is_dead: bool,
         /// block number at which the game ends
         deadline: u32,
-        /// Stores a mapping between user accounts and the block number of blocks they extended The Buttons life for
+        /// Stores a mapping between user accounts and the number of blocks they extended The Buttons life for
         presses: Mapping<AccountId, u32>,
         /// stores keys to `presses` because Mapping is not an Iterator. Heap-allocated! so we might need Map<u32, AccountId>
         press_accounts: Vec<AccountId>,
@@ -104,6 +104,8 @@ mod the_button {
         total_scores: u32,
         /// stores the last account that pressed The Button
         last_presser: Option<AccountId>,
+        /// block number of the last press
+        last_press: u32,
         /// the ERC20 ButtonToken instance on-chain AccountId
         button_token: AccountId,
     }
@@ -129,7 +131,6 @@ mod the_button {
             })
         }
 
-        // TODO
         /// End of the game logic
         fn death(&mut self) -> Result<()> {
             self.is_dead = true;
@@ -169,12 +170,25 @@ mod the_button {
             let total = self.total_scores;
             let remaining_balance = total_balance - pressiah_reward;
             // rewards are distributed to participants proportionally to their score
-            self.press_accounts.iter().map(|account_id| {
+            self.press_accounts.iter().map(|account_id| -> Result<()> {
                 if let Some(score) = self.presses.get(account_id) {
-                    let amount = (score / total) as u128 * remaining_balance;
+                    let reward = (score / total) as u128 * remaining_balance;
 
-                    // TODO: transfer amount
+                    // transfer amount
+                    return Ok(build_call::<DefaultEnvironment>()
+                        .call_type(Call::new().callee(button_token).gas_limit(5000))
+                        .transferred_value(self.env().transferred_value())
+                        .exec_input(
+                            ExecutionInput::new(
+                                Selector::new([0, 0, 0, 4]), // transfer
+                            )
+                            .push_arg(account_id)
+                            .push_arg(reward),
+                        )
+                        .returns::<()>()
+                        .fire()?);
                 }
+                Ok(())
             });
 
             Ok(())
@@ -198,12 +212,15 @@ mod the_button {
                 }
 
                 // record press
-                let score = self.deadline - now;
-                self.total_scores += score;
+                // score is the number of blocks the button life was extended for
+                // this incentivizes pressing as late as possible in the game (but not too late)
+                let score = now - self.last_press;
                 self.presses.insert(&caller, &score);
                 self.press_accounts.push(caller);
+                // another
                 self.last_presser = Some(caller);
-
+                self.last_press = now;
+                self.total_scores += score;
                 // reset button lifetime
                 self.deadline = now + BUTTON_LIFETIME;
 
