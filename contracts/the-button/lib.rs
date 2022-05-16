@@ -14,14 +14,14 @@ use ink_lang as ink;
 #[ink::contract]
 mod the_button {
 
-    use button_token::{ButtonToken, ButtonTokenRef};
+    // use button_token::{ButtonToken, ButtonTokenRef};
     use ink_env::{
         call::{build_call, Call, DelegateCall, ExecutionInput, Selector},
         DefaultEnvironment, Error as InkEnvError,
     };
     use ink_prelude::{string::String, vec::Vec};
     use ink_storage::{traits::SpreadAllocate, Mapping};
-    use trait_erc20::erc20::Erc20;
+    // use trait_erc20::erc20::Erc20;
 
     /// How many blocks does The Button live for
     const BUTTON_LIFETIME: u32 = 604800; // 7 days assuming 1s block time
@@ -224,12 +224,11 @@ mod the_button {
                 // reset button lifetime
                 self.deadline = now + BUTTON_LIFETIME;
 
-                // TODO : compilation error
                 // emit event
-                // self.env().emit_event(ButtonPressed {
-                //     from: caller,
-                //     when: now,
-                // });
+                self.env().emit_event(ButtonPressed {
+                    from: caller,
+                    when: now,
+                });
 
                 Ok(())
             }
