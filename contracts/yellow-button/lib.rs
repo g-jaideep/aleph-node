@@ -2,7 +2,7 @@
 
 use ink_lang as ink;
 
-/// This is the YelowButton
+/// This is the YellowButton
 /// Rewards are distributed for extending the life of the button for as long as possible:
 /// user_score = deadline - now
 /// Pressiah gets 50% of tokens
@@ -18,7 +18,7 @@ use ink_lang as ink;
 // TODO : add upgradeability (proxy)
 
 #[ink::contract]
-mod the_button {
+mod yellow_button {
 
     use ink_env::{
         call::{build_call, Call, DelegateCall, ExecutionInput, Selector},
@@ -95,7 +95,7 @@ mod the_button {
     /// Defines the storage
     #[ink(storage)]
     #[derive(SpreadAllocate)]
-    pub struct TheButton {
+    pub struct YellowButton {
         /// is The Button dead
         is_dead: bool,
         /// block number at which the game ends
@@ -123,7 +123,7 @@ mod the_button {
         when: u32,
     }
 
-    impl TheButton {
+    impl YellowButton {
         /// Constructor
         #[ink(constructor)]
         pub fn new(button_token: AccountId) -> Self {
