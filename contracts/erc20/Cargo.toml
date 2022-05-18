@@ -1,5 +1,5 @@
 [package]
-name = "button_token"
+name = "erc20"
 version = "0.1.0"
 authors = ["Cardinal Cryptography"]
 edition = "2021"

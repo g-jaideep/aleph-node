@@ -2,26 +2,30 @@
 
 use ink_lang as ink;
 
+/// This is the YelowButton
+/// Rewards are distributed for extending the life of the button for as long as possible:
+/// user_score = deadline - now
+/// Pressiah gets 50% of tokens
+/// the game is played until TheButton dies
+
 // DONE : contract holds ERC20 funds
 // DONE : contract distributes funds to all accounts that participated (according to a formula)
 // e.g. :
 // - 50% go to the Pressiah
 // - rest is distributed proportionally to how long has a given user extended TheButtons life for
+// TODO : add sybil protection (only staking accounts can participate)
 // TODO : add getters
 // TODO : add upgradeability (proxy)
-// TODO : add sybil protection (only staking accounts can participate)
 
 #[ink::contract]
 mod the_button {
 
-    // use button_token::{ButtonToken, ButtonTokenRef};
     use ink_env::{
         call::{build_call, Call, DelegateCall, ExecutionInput, Selector},
         DefaultEnvironment, Error as InkEnvError,
     };
     use ink_prelude::{string::String, vec::Vec};
     use ink_storage::{traits::SpreadAllocate, Mapping};
-    // use trait_erc20::erc20::Erc20;
 
     /// How many blocks does The Button live for
     const BUTTON_LIFETIME: u32 = 604800; // 7 days assuming 1s block time
