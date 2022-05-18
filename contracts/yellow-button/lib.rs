@@ -13,7 +13,7 @@ use ink_lang as ink;
 // e.g. :
 // - 50% go to the Pressiah
 // - rest is distributed proportionally to how long has a given user extended TheButtons life for
-// TODO : add sybil protection (only staking accounts can participate)
+// TODO : add sybil protection (only whitelisted accounts can participate)
 // TODO : add getters
 // TODO : add upgradeability (proxy)
 
