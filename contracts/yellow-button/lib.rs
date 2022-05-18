@@ -13,9 +13,9 @@ use ink_lang as ink;
 // e.g. :
 // - 50% go to the Pressiah
 // - rest is distributed proportionally to how long has a given user extended TheButtons life for
-// TODO : add sybil protection (only whitelisted accounts can participate)
+// IN-PROGRESS : add sybil protection (only whitelisted accounts can participate)
 // TODO : add getters
-// TODO : add upgradeability (proxy)
+// maybe TODO : add upgradeability (proxy)
 
 #[ink::contract]
 mod yellow_button {
@@ -38,6 +38,8 @@ mod yellow_button {
         AlreadyParticipated,
         /// Returned if button is pressed after the deadline
         AfterDeadline,
+        /// Account not whitelisted to play
+        NotWhitelisted,
         /// Returned if a call to another contract has failed
         ContractCallError(String),
     }
@@ -112,6 +114,8 @@ mod yellow_button {
         last_press: u32,
         /// the ERC20 ButtonToken instance on-chain AccountId
         button_token: AccountId,
+        /// accounts whitelisted to play the game
+        can_play: Mapping<AccountId, bool>,
     }
 
     /// Event emitted when The Button is pressed
@@ -207,39 +211,43 @@ mod yellow_button {
         pub fn press(&mut self) -> Result<()> {
             if self.is_dead {
                 return Err(Error::AfterDeadline);
-            } else {
-                let now = self.env().block_number();
-                if self.deadline >= now {
-                    // trigger Buttons death
-                    return self.death();
-                }
-
-                let caller = self.env().caller();
-                if self.presses.get(&caller).is_some() {
-                    return Err(Error::AlreadyParticipated);
-                }
-
-                // record press
-                // score is the number of blocks the button life was extended for
-                // this incentivizes pressing as late as possible in the game (but not too late)
-                let score = now - self.last_press;
-                self.presses.insert(&caller, &score);
-                self.press_accounts.push(caller);
-                // another
-                self.last_presser = Some(caller);
-                self.last_press = now;
-                self.total_scores += score;
-                // reset button lifetime
-                self.deadline = now + BUTTON_LIFETIME;
-
-                // emit event
-                self.env().emit_event(ButtonPressed {
-                    from: caller,
-                    when: now,
-                });
-
-                Ok(())
             }
+
+            let now = self.env().block_number();
+            if self.deadline >= now {
+                // trigger Buttons death
+                return self.death();
+            }
+
+            let caller = self.env().caller();
+            if self.presses.get(&caller).is_some() {
+                return Err(Error::AlreadyParticipated);
+            }
+
+            if !self.can_play.get(&caller).unwrap_or(false) {
+                return Err(Error::NotWhitelisted);
+            }
+
+            // record press
+            // score is the number of blocks the button life was extended for
+            // this incentivizes pressing as late as possible in the game (but not too late)
+            let score = now - self.last_press;
+            self.presses.insert(&caller, &score);
+            self.press_accounts.push(caller);
+            // another
+            self.last_presser = Some(caller);
+            self.last_press = now;
+            self.total_scores += score;
+            // reset button lifetime
+            self.deadline = now + BUTTON_LIFETIME;
+
+            // emit event
+            self.env().emit_event(ButtonPressed {
+                from: caller,
+                when: now,
+            });
+
+            Ok(())
         }
     }
 }
