@@ -174,26 +174,30 @@ mod yellow_button {
             let total = self.total_scores;
             let remaining_balance = total_balance - pressiah_reward;
             // rewards are distributed to participants proportionally to their score
-            self.press_accounts.iter().map(|account_id| -> Result<()> {
-                if let Some(score) = self.presses.get(account_id) {
-                    let reward = (score / total) as u128 * remaining_balance;
+            let _ = self
+                .press_accounts
+                .iter()
+                .map(|account_id| -> Result<()> {
+                    if let Some(score) = self.presses.get(account_id) {
+                        let reward = (score / total) as u128 * remaining_balance;
 
-                    // transfer amount
-                    return Ok(build_call::<DefaultEnvironment>()
-                        .call_type(Call::new().callee(button_token).gas_limit(5000))
-                        .transferred_value(self.env().transferred_value())
-                        .exec_input(
-                            ExecutionInput::new(
-                                Selector::new([0, 0, 0, 4]), // transfer
+                        // transfer amount
+                        return Ok(build_call::<DefaultEnvironment>()
+                            .call_type(Call::new().callee(button_token).gas_limit(5000))
+                            .transferred_value(self.env().transferred_value())
+                            .exec_input(
+                                ExecutionInput::new(
+                                    Selector::new([0, 0, 0, 4]), // transfer
+                                )
+                                .push_arg(account_id)
+                                .push_arg(reward),
                             )
-                            .push_arg(account_id)
-                            .push_arg(reward),
-                        )
-                        .returns::<()>()
-                        .fire()?);
-                }
-                Ok(())
-            });
+                            .returns::<()>()
+                            .fire()?);
+                    }
+                    Ok(())
+                })
+                .collect::<Result<()>>();
 
             Ok(())
         }
