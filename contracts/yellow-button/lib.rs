@@ -14,6 +14,7 @@ use ink_lang as ink;
 // - 50% go to the Pressiah
 // - rest is distributed proportionally to how long has a given user extended TheButtons life for
 // IN-PROGRESS : add sybil protection (only whitelisted accounts can participate)
+// - TODO add / remove whitelisted accounts
 // TODO : add getters
 // maybe TODO : add upgradeability (proxy)
 
