@@ -22,7 +22,7 @@ use ink_lang as ink;
 mod yellow_button {
 
     use ink_env::{
-        call::{build_call, Call, DelegateCall, ExecutionInput, Selector},
+        call::{build_call, Call, ExecutionInput, Selector},
         DefaultEnvironment, Error as InkEnvError,
     };
     use ink_prelude::{string::String, vec::Vec};
@@ -42,7 +42,7 @@ mod yellow_button {
         /// Account not whitelisted to play
         NotWhitelisted,
         /// Returned if a call to another contract has failed
-        ContractCallError(String),
+        ContractCall(String),
     }
 
     /// Result type
@@ -51,46 +51,46 @@ mod yellow_button {
     impl From<InkEnvError> for Error {
         fn from(e: InkEnvError) -> Self {
             match e {
-                InkEnvError::Decode(_e) => Error::ContractCallError(String::from(
-                    "Contract call failed due to Decode error",
-                )),
-                InkEnvError::CalleeTrapped => Error::ContractCallError(String::from(
+                InkEnvError::Decode(_e) => {
+                    Error::ContractCall(String::from("Contract call failed due to Decode error"))
+                }
+                InkEnvError::CalleeTrapped => Error::ContractCall(String::from(
                     "Contract call failed due to CalleeTrapped error",
                 )),
-                InkEnvError::CalleeReverted => Error::ContractCallError(String::from(
+                InkEnvError::CalleeReverted => Error::ContractCall(String::from(
                     "Contract call failed due to CalleeReverted error",
                 )),
-                InkEnvError::KeyNotFound => Error::ContractCallError(String::from(
+                InkEnvError::KeyNotFound => Error::ContractCall(String::from(
                     "Contract call failed due to KeyNotFound error",
                 )),
-                InkEnvError::_BelowSubsistenceThreshold => Error::ContractCallError(String::from(
+                InkEnvError::_BelowSubsistenceThreshold => Error::ContractCall(String::from(
                     "Contract call failed due to _BelowSubsistenceThreshold error",
                 )),
-                InkEnvError::TransferFailed => Error::ContractCallError(String::from(
+                InkEnvError::TransferFailed => Error::ContractCall(String::from(
                     "Contract call failed due to TransferFailed error",
                 )),
-                InkEnvError::_EndowmentTooLow => Error::ContractCallError(String::from(
+                InkEnvError::_EndowmentTooLow => Error::ContractCall(String::from(
                     "Contract call failed due to _EndowmentTooLow error",
                 )),
-                InkEnvError::CodeNotFound => Error::ContractCallError(String::from(
+                InkEnvError::CodeNotFound => Error::ContractCall(String::from(
                     "Contract call failed due to CodeNotFound error",
                 )),
-                InkEnvError::NotCallable => Error::ContractCallError(String::from(
+                InkEnvError::NotCallable => Error::ContractCall(String::from(
                     "Contract call failed due to NotCallable error",
                 )),
-                InkEnvError::Unknown => Error::ContractCallError(String::from(
-                    "Contract call failed due to Unknown error",
-                )),
-                InkEnvError::LoggingDisabled => Error::ContractCallError(String::from(
+                InkEnvError::Unknown => {
+                    Error::ContractCall(String::from("Contract call failed due to Unknown error"))
+                }
+                InkEnvError::LoggingDisabled => Error::ContractCall(String::from(
                     "Contract call failed due to LoggingDisabled error",
                 )),
-                InkEnvError::EcdsaRecoveryFailed => Error::ContractCallError(String::from(
+                InkEnvError::EcdsaRecoveryFailed => Error::ContractCall(String::from(
                     "Contract call failed due to EcdsaRecoveryFailed error",
                 )),
                 #[cfg(any(feature = "std", test, doc))]
-                InkEnvError::OffChain(_e) => Error::ContractCallError(String::from(
-                    "Contract call failed due to OffChain error",
-                )),
+                InkEnvError::OffChain(_e) => {
+                    Error::ContractCall(String::from("Contract call failed due to OffChain error"))
+                }
             }
         }
     }
@@ -113,7 +113,7 @@ mod yellow_button {
         last_presser: Option<AccountId>,
         /// block number of the last press
         last_press: u32,
-        /// the ERC20 ButtonToken instance on-chain AccountId
+        /// AccountId of the ERC20 ButtonToken instance on-chain
         button_token: AccountId,
         /// accounts whitelisted to play the game
         can_play: Mapping<AccountId, bool>,
@@ -182,7 +182,7 @@ mod yellow_button {
             let _ = self
                 .press_accounts
                 .iter()
-                .map(|account_id| -> Result<()> {
+                .try_for_each(|account_id| -> Result<()> {
                     if let Some(score) = self.presses.get(account_id) {
                         let reward = (score / total) as u128 * remaining_balance;
 
@@ -201,9 +201,26 @@ mod yellow_button {
                             .fire()?);
                     }
                     Ok(())
-                })
-                .collect::<Result<()>>();
+                });
 
+            Ok(())
+        }
+
+        // TODO : ownership
+        /// Whitelists given AccountId to participate in the game
+        ///
+        #[ink(message)]
+        pub fn allow(&mut self, player: AccountId) -> Result<()> {
+            self.can_play.insert(player, &true);
+            Ok(())
+        }
+
+        // TODO : ownership
+        /// Blacklists given AccountId from participating in the game
+        ///
+        #[ink(message)]
+        pub fn disallow(&mut self, player: AccountId) -> Result<()> {
+            self.can_play.insert(player, &false);
             Ok(())
         }
 
