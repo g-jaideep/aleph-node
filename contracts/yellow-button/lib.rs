@@ -16,7 +16,7 @@ use ink_lang as ink;
 // DONE : add sybil protection (only whitelisted accounts can participate)
 // - DONE add / remove whitelisted accounts
 // - DONE add access-control
-// TODO : add getters
+// DONE : add getters
 
 #[ink::contract]
 mod yellow_button {
@@ -157,6 +157,36 @@ mod yellow_button {
     pub struct ButtonDeath;
 
     impl YellowButton {
+        /// Returns the buttons status
+        #[ink(message)]
+        pub fn is_dead(&self) -> bool {
+            self.is_dead
+        }
+
+        /// Returns the current deadline
+        #[ink(message)]
+        pub fn deadline(&self) -> u32 {
+            self.deadline
+        }
+
+        /// Returns the user score
+        #[ink(message)]
+        pub fn score_of(&self, user: AccountId) -> u32 {
+            self.presses.get(&user).unwrap_or(0)
+        }
+
+        /// Returns whether given account can play
+        #[ink(message)]
+        pub fn can_play(&self, user: AccountId) -> bool {
+            self.can_play.get(&user).unwrap_or(false)
+        }
+
+        /// Returns the account id that pressed as last        
+        #[ink(message)]
+        pub fn last_presser(&self) -> Option<AccountId> {
+            self.last_presser
+        }
+
         /// Constructor
         #[ink(constructor)]
         pub fn new(button_token: AccountId, button_lifetime: u32) -> Self {
