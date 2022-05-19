@@ -67,7 +67,7 @@ pub mod button_token {
         }
     }
 
-    // TODO : investigate whether message selectors carry over from trait (afaik not, which is too bad)
+    // TODO : investigate whether message selectors carry over from trait (afaik not, which is sad)
     impl Erc20 for ButtonToken {
         /// Returns the total token supply.
         #[ink(message, selector = 1)]

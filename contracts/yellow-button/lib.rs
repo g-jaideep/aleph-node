@@ -14,9 +14,10 @@ use ink_lang as ink;
 // - 50% go to the Pressiah
 // - rest is distributed proportionally to how long has a given user extended TheButtons life for
 // IN-PROGRESS : add sybil protection (only whitelisted accounts can participate)
-// - TODO add / remove whitelisted accounts
+// - DONE add / remove whitelisted accounts
+// - TODO add access-control
 // TODO : add getters
-// maybe TODO : add upgradeability (proxy)
+// maybe TODO : add upgradeability (proxy / set_hash)
 
 #[ink::contract]
 mod yellow_button {
@@ -28,9 +29,6 @@ mod yellow_button {
     use ink_prelude::{string::String, vec::Vec};
     use ink_storage::{traits::SpreadAllocate, Mapping};
 
-    /// How many blocks does The Button live for
-    const BUTTON_LIFETIME: u32 = 604800; // 7 days assuming 1s block time
-
     /// Error types
     #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
@@ -41,6 +39,8 @@ mod yellow_button {
         AfterDeadline,
         /// Account not whitelisted to play
         NotWhitelisted,
+        /// When Account which is not the owner calls a method with access control
+        NotOwner,
         /// Returned if a call to another contract has failed
         ContractCall(String),
     }
@@ -99,6 +99,10 @@ mod yellow_button {
     #[ink(storage)]
     #[derive(SpreadAllocate)]
     pub struct YellowButton {
+        /// access control
+        owner: AccountId,
+        /// How long does TheButton live for?
+        button_lifetime: u32,
         /// is The Button dead
         is_dead: bool,
         /// block number at which the game ends
@@ -128,14 +132,26 @@ mod yellow_button {
         when: u32,
     }
 
+    /// Event emitted when TheButton owner is changed
+    #[ink(event)]
+    pub struct OwnershipTransferred {
+        #[ink(topic)]
+        from: AccountId,
+        #[ink(topic)]
+        to: AccountId,
+    }
+
     impl YellowButton {
         /// Constructor
         #[ink(constructor)]
-        pub fn new(button_token: AccountId) -> Self {
+        pub fn new(button_token: AccountId, button_lifetime: u32) -> Self {
             ink_lang::utils::initialize_contract(|contract: &mut Self| {
                 let now = Self::env().block_number();
+                let caller = Self::env().caller();
+                contract.owner = caller;
                 contract.is_dead = false;
-                contract.deadline = now + BUTTON_LIFETIME;
+                contract.button_lifetime = button_lifetime;
+                contract.deadline = now + button_lifetime;
                 contract.button_token = button_token;
             })
         }
@@ -206,20 +222,29 @@ mod yellow_button {
             Ok(())
         }
 
-        // TODO : ownership
         /// Whitelists given AccountId to participate in the game
         ///
+        /// returns an error if called by someone else but the owner
         #[ink(message)]
         pub fn allow(&mut self, player: AccountId) -> Result<()> {
+            let caller = Self::env().caller();
+            if caller != self.owner {
+                return Err(Error::NotOwner);
+            }
+
             self.can_play.insert(player, &true);
             Ok(())
         }
 
-        // TODO : ownership
         /// Blacklists given AccountId from participating in the game
         ///
+        /// returns an error if called by someone else but the owner        
         #[ink(message)]
         pub fn disallow(&mut self, player: AccountId) -> Result<()> {
+            let caller = Self::env().caller();
+            if caller != self.owner {
+                return Err(Error::NotOwner);
+            }
             self.can_play.insert(player, &false);
             Ok(())
         }
@@ -257,7 +282,7 @@ mod yellow_button {
             self.last_press = now;
             self.total_scores += score;
             // reset button lifetime
-            self.deadline = now + BUTTON_LIFETIME;
+            self.deadline = now + self.button_lifetime;
 
             // emit event
             self.env().emit_event(ButtonPressed {
