@@ -13,11 +13,10 @@ use ink_lang as ink;
 // e.g. :
 // - 50% go to the Pressiah
 // - rest is distributed proportionally to how long has a given user extended TheButtons life for
-// IN-PROGRESS : add sybil protection (only whitelisted accounts can participate)
+// DONE : add sybil protection (only whitelisted accounts can participate)
 // - DONE add / remove whitelisted accounts
-// - TODO add access-control
+// - DONE add access-control
 // TODO : add getters
-// maybe TODO : add upgradeability (proxy / set_hash)
 
 #[ink::contract]
 mod yellow_button {
@@ -130,6 +129,7 @@ mod yellow_button {
         from: AccountId,
         #[ink(topic)]
         when: u32,
+        #[ink(topic)]
         new_deadline: u32,
     }
 
@@ -150,6 +150,11 @@ mod yellow_button {
         #[ink(topic)]
         deadline: u32,
     }
+
+    /// Even emitted when button death is triggered
+    ///
+    #[ink(event)]
+    pub struct ButtonDeath;
 
     impl YellowButton {
         /// Constructor
@@ -174,6 +179,7 @@ mod yellow_button {
         }
 
         /// End of the game logic
+        /// distributes the rewards to the participants
         fn death(&mut self) -> Result<()> {
             self.is_dead = true;
 
@@ -235,6 +241,8 @@ mod yellow_button {
                     }
                     Ok(())
                 });
+
+            self.env().emit_event(ButtonDeath {});
 
             Ok(())
         }
@@ -304,8 +312,12 @@ mod yellow_button {
             }
 
             let now = self.env().block_number();
-            if self.deadline >= now {
-                // trigger Buttons death
+            if now >= self.deadline {
+                // trigger TheButton's death
+                // at this point is is after the deadline but the death event has not yet been triggered
+                // to distribute the awards
+                // the last account to click the button in this state will pay for all the computations
+                // but that should be OK (similar to paying for distributing staking rewards)
                 return self.death();
             }
 
