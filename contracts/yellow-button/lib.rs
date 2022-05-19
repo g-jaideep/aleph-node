@@ -249,6 +249,18 @@ mod yellow_button {
             Ok(())
         }
 
+        #[ink(message)]
+        pub fn transfer_ownership(&mut self, to: AccountId) -> Result<()> {
+            let caller = Self::env().caller();
+            if caller != self.owner {
+                return Err(Error::NotOwner);
+            }
+            self.owner = to;
+            self.env()
+                .emit_event(OwnershipTransferred { from: caller, to });
+            Ok(())
+        }
+
         /// Button press logic
         #[ink(message)]
         pub fn press(&mut self) -> Result<()> {
