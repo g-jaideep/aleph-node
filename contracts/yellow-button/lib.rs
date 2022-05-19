@@ -123,13 +123,14 @@ mod yellow_button {
         can_play: Mapping<AccountId, bool>,
     }
 
-    /// Event emitted when The Button is pressed
+    /// Event emitted when TheButton is pressed
     #[ink(event)]
     pub struct ButtonPressed {
         #[ink(topic)]
         from: AccountId,
         #[ink(topic)]
         when: u32,
+        new_deadline: u32,
     }
 
     /// Event emitted when TheButton owner is changed
@@ -141,6 +142,15 @@ mod yellow_button {
         to: AccountId,
     }
 
+    /// Event emitted when TheButton is created
+    #[ink(event)]
+    pub struct ButtonCreated {
+        #[ink(topic)]
+        start: u32,
+        #[ink(topic)]
+        deadline: u32,
+    }
+
     impl YellowButton {
         /// Constructor
         #[ink(constructor)]
@@ -148,11 +158,18 @@ mod yellow_button {
             ink_lang::utils::initialize_contract(|contract: &mut Self| {
                 let now = Self::env().block_number();
                 let caller = Self::env().caller();
+                let deadline = now + button_lifetime;
+
                 contract.owner = caller;
                 contract.is_dead = false;
                 contract.button_lifetime = button_lifetime;
-                contract.deadline = now + button_lifetime;
+                contract.deadline = deadline;
                 contract.button_token = button_token;
+
+                Self::env().emit_event(ButtonCreated {
+                    start: now,
+                    deadline,
+                });
             })
         }
 
@@ -227,12 +244,27 @@ mod yellow_button {
         /// returns an error if called by someone else but the owner
         #[ink(message)]
         pub fn allow(&mut self, player: AccountId) -> Result<()> {
-            let caller = Self::env().caller();
-            if caller != self.owner {
+            if Self::env().caller() != self.owner {
                 return Err(Error::NotOwner);
             }
 
             self.can_play.insert(player, &true);
+            Ok(())
+        }
+
+        /// Whitelists an array of accounts to participate in the game
+        ///
+        /// returns an error if called by someone else but the owner
+        #[ink(message)]
+        pub fn bulk_allow(&mut self, players: Vec<AccountId>) -> Result<()> {
+            if Self::env().caller() != self.owner {
+                return Err(Error::NotOwner);
+            }
+
+            players.iter().for_each(|player| {
+                self.can_play.insert(player, &true);
+            });
+
             Ok(())
         }
 
@@ -249,6 +281,9 @@ mod yellow_button {
             Ok(())
         }
 
+        /// Transfers ownership of the contract to a a new account
+        ///
+        /// Can only be called by the current owner
         #[ink(message)]
         pub fn transfer_ownership(&mut self, to: AccountId) -> Result<()> {
             let caller = Self::env().caller();
@@ -300,6 +335,7 @@ mod yellow_button {
             self.env().emit_event(ButtonPressed {
                 from: caller,
                 when: now,
+                new_deadline: self.deadline,
             });
 
             Ok(())
